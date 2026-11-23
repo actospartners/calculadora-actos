@@ -146,6 +146,31 @@ footer p{max-width:78ch;margin:14px auto 0}
 .path b{display:block;font-weight:700}.path span{font-size:15px;color:#4d6159}
 .lg{max-width:80ch;margin:26px auto 0;font-size:13.5px;color:#5c6f66}
 
+
+.calc2{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.2fr);gap:24px;margin-top:-70px;position:relative;z-index:3;align-items:start}
+.calc2 .inp{position:sticky;top:16px}
+.biglab{display:block;font-weight:700;font-size:19px;margin:0 0 12px}
+.cin{display:flex;align-items:center;gap:10px;background:#fff;border:2px solid #bcd3c5;border-radius:12px;padding:0 18px;height:78px}
+.cin:focus-within{border-color:#0e8f7b;box-shadow:0 0 0 4px rgba(6,232,214,.25)}
+.cin span{font-family:var(--mono);font-size:22px;color:#5c6f66}
+.cin input{border:0;outline:0;font:600 40px var(--f);width:100%;background:transparent;color:#10241F;font-variant-numeric:tabular-nums;min-width:0}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.chip{border:1.5px solid #b7cdbf;background:#fff;border-radius:99px;padding:8px 16px;font:600 16px var(--f);cursor:pointer;color:#1B3A32}
+.chip[aria-pressed="true"]{background:#1B3A32;color:#fff;border-color:#1B3A32}
+details.opt{margin-top:22px;border-top:1px solid #dbe6df;padding-top:14px}
+details.opt summary{cursor:pointer;font-weight:600;color:#1B3A32}
+.two2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.two2 input{width:100%;height:46px;font:inherit;font-size:17px;padding:0 12px;border:1px solid #cfd8cc;border-radius:6px;background:#F2EFE8;color:#10241F}
+.two2 label{display:block;font-size:13px;font-weight:700;margin-bottom:4px}
+.lab2{margin-top:10px;font-size:14px;color:#b9c9b8}
+.ok2{margin:14px 0 0;font-weight:700;color:#7ff5e6}
+#res2{display:grid;gap:16px}
+.paths2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pth{text-align:left;border:1.5px solid #cfe0d4;background:#F2EFE8;border-radius:12px;padding:14px 16px;cursor:pointer;font:inherit;color:#10241F;display:grid;gap:4px;transition:border-color .15s,background .15s}
+.pth b{font-weight:700;font-size:17px}.pth span{font-size:15px;color:#4d6159}
+.pth.on{border-color:#0e8f7b;background:#e3f4ee}
+.pth:focus-visible{outline:3px solid #06E8D6;outline-offset:2px}
+@media (max-width:860px){.calc2{grid-template-columns:1fr;margin-top:-50px}.calc2 .inp{position:static}.paths2{grid-template-columns:1fr}.cin input{font-size:34px}}
 @media (max-width:860px){
   .row,.cards,.calc,.paths,.kv{grid-template-columns:1fr}
   .card:nth-child(n){margin-top:0}
@@ -248,35 +273,58 @@ function viewThanks(){
  '<p class="after">O link da calculadora fica na descrição do grupo.</p></div></div>'+foot();
 }
 
+var CALC={p:2500,path:-1,shown:0};
+var PATHS=[
+ {t:"Gerar nova renda",d:"Usar o crédito para comprar outro imóvel e colocar para alugar. Você soma um segundo aluguel ao patrimônio, sem vender o primeiro."},
+ {t:"Valorizar o que você já tem",d:"Reformar ou ampliar o imóvel atual para aumentar o valor dele e o aluguel que ele pode render."},
+ {t:"Ter caixa para oportunidade",d:"Manter liquidez planejada para aproveitar uma compra boa quando ela aparecer, sem precisar vender o imóvel às pressas."},
+ {t:"Trocar dívida cara",d:"Reorganizar dívidas com juros altos em uma parcela previsível, que cabe no seu orçamento."}
+];
+function creditFor(p){var T=CONFIG.TABELA,f=(1+T.taxaTotal)/T.prazo,c=Math.floor(p/f/T.passo)*T.passo;if(c>T.max)c=T.max;return c>=T.min?{credito:c,parcela:c*f,prazo:T.prazo}:null}
 function viewCalc(){
  return '<div class="hd full">'+WAVE+'<div class="in"><div class="top" style="padding-top:26px">'+logo(170)+'</div>'+
- '<h1>Calculadora de alavancagem imobiliária</h1><p>Digite a parcela mensal que cabe no seu bolso. O resultado aparece na hora.</p></div></div>'+
- '<div class="body full" style="padding-top:0">'+WM+'<div class="in"><div class="calc"><div class="pn">'+
- '<div class="f"><label for="v">Valor do imóvel (R$)</label><input id="v" type="number" inputmode="numeric" value="1000000" min="0" step="10000"></div>'+
- '<div class="f"><label for="a">Aluguel mensal atual (R$)</label><input id="a" type="number" inputmode="numeric" value="4500" min="0" step="100"></div>'+
- '<div class="f"><label for="p">Parcela mensal que cabe no bolso (R$)</label><input id="p" type="number" inputmode="numeric" value="'+(LEAD.parcela||3000)+'" min="0" step="100"></div>'+
- '<p class="nt" style="margin:0">Exemplo preenchido. Troque pelos seus números.</p></div><div class="res" id="res"></div></div>'+
+ '<h1>Calculadora de alavancagem imobiliária</h1><p>Digite a parcela mensal que cabe no seu bolso e veja a sua simulação na hora.</p></div></div>'+
+ '<div class="body full" style="padding-top:0">'+WM+'<div class="in"><div class="calc2">'+
+ '<div class="pn inp"><label for="pv" class="biglab">Quanto cabe no seu bolso por mês?</label>'+
+ '<div class="cin"><span>R$</span><input id="pv" type="text" inputmode="numeric" autocomplete="off" aria-label="Parcela mensal em reais"></div>'+
+ '<div class="chips" id="chips"></div>'+
+ '<details class="opt"><summary>Quer ver quanto o seu imóvel rende hoje?</summary><div class="two2"><div><label for="iv">Valor do imóvel (R$)</label><input id="iv" type="text" inputmode="numeric" placeholder="1.000.000"></div><div><label for="ia">Aluguel mensal (R$)</label><input id="ia" type="text" inputmode="numeric" placeholder="4.500"></div></div><p class="nt" id="rend" style="margin:10px 0 0"></p></details>'+
+ '</div><div id="res2"></div></div>'+
  '<p class="lg">'+LEGAL+'</p></div></div>'+foot();
 }
-function calc(){
- var v=+document.getElementById("v").value||0,a=+document.getElementById("a").value||0,p=+document.getElementById("p").value||0,T=CONFIG.TABELA;
- var am=v>0?a/v*100:0,aa=am*12,fator=(1+T.taxaTotal)/T.prazo,cred=p>0?Math.floor(p/fator/T.passo)*T.passo:0;
- if(cred>T.max)cred=T.max;var ok=cred>=T.min,parc=cred*fator,ratio=v>0?cred/v*100:0;
- var o='<div class="pn dk"><span class="tag">1 · O que o imóvel rende hoje</span><div class="bg">'+pct(am)+' ao mês</div><div class="kv"><div>Aluguel por ano<b>'+brl(a*12)+'</b></div><div>Rendimento anual bruto<b>'+pct(aa)+'</b></div><div>Valor do imóvel<b>'+brl(v)+'</b></div></div><p class="nt">Antes de impostos, vacância e custos. Imóvel de alto valor com aluguel baixo é patrimônio grande com pouca liquidez.</p></div>';
- if(ok){
-  o+='<div class="pn"><span class="tag">2 · Liquidez que pode ser criada</span><div class="bg">'+brl(cred)+'</div><div class="kv"><div>Parcela mensal<b>'+brl(parc)+'</b></div><div>Prazo<b>'+T.prazo+' meses</b></div><div>Equivale a<b>'+pct(ratio)+' do imóvel</b></div></div><p class="nt">Estimativa ilustrativa para o valor de parcela informado.</p></div>'+
-  '<div class="pn"><span class="tag">3 · O que fazer com isso, sem vender o imóvel</span><div class="paths">'+
-  '<div class="path"><b>Gerar nova renda</b><span>Comprar outro imóvel para locação e somar aluguéis.</span></div><div class="path"><b>Valorizar o que você já tem</b><span>Reformar ou ampliar para subir valor e aluguel.</span></div>'+
-  '<div class="path"><b>Ter caixa para oportunidade</b><span>Liquidez planejada para uma compra boa quando aparecer.</span></div><div class="path"><b>Trocar dívida cara</b><span>Reorganizar o que hoje pesa nos juros.</span></div></div>'+
-  '<div style="text-align:center"><a class="cta" style="margin-top:22px;font-size:18px" href="'+CONFIG.WHATS_ESPECIALISTA+'" target="_blank" rel="noopener"><span class="pl">▶</span>Falar com um especialista</a></div></div>';
- } else o+='<div class="pn"><b>Aumente a parcela para ver a simulação.</b><p class="nt">A partir de '+brl(Math.ceil(T.min*fator))+' por mês.</p></div>';
- document.getElementById("res").innerHTML=o;
+function num(v){return +String(v||"").replace(/\D/g,"")||0}
+function fmtIn(el){var n=num(el.value);el.value=n?n.toLocaleString("pt-BR"):""}
+function specialistUrl(r){var m="Fiz a simulação na calculadora da Actos. Parcela de "+brl(CALC.p)+", crédito de "+brl(r.credito)+(CALC.path>=0?". Tenho interesse em: "+PATHS[CALC.path].t:"")+". Quero falar com um especialista.";return CONFIG.WHATS_ESPECIALISTA.split("?")[0]+"?text="+encodeURIComponent(m)}
+function renderCalc(){
+ var r=creditFor(CALC.p),el=document.getElementById("res2"),T=CONFIG.TABELA,f=(1+T.taxaTotal)/T.prazo;
+ if(!r){el.innerHTML='<div class="pn"><b class="biglab">Aumente um pouco a parcela para ver a simulação.</b><p class="nt">A simulação começa em '+brl(Math.ceil(T.min*f))+' por mês.</p></div>';return}
+ var sobra=CALC.p-r.parcela;
+ var h='<div class="pn dk"><span class="tag">Sua simulação Actos</span><div class="lab2">Crédito disponível na tabela</div><div class="bg" id="cnum">'+brl(CALC.shown||r.credito)+'</div>'+
+ '<div class="kv"><div>Parcela mensal<b>'+brl(r.parcela)+'</b></div><div>Prazo<b>'+r.prazo+' meses</b></div><div>Do seu orçamento<b>sobram '+brl(sobra)+'</b></div></div>'+
+ '<p class="ok2">Dentro do seu orçamento.</p></div>'+
+ '<div class="pn"><span class="tag">E agora? 4 caminhos para usar esse crédito</span><p class="nt" style="margin:6px 0 12px">Escolha o que mais faz sentido para você. Sem precisar vender o imóvel.</p><div class="paths2">';
+ PATHS.forEach(function(p,i){var on=CALC.path===i;h+='<button type="button" class="pth'+(on?' on':'')+'" data-path="'+i+'" aria-pressed="'+on+'"><b>'+p.t+'</b><span>'+(on?p.d:'Toque para ver como funciona')+'</span></button>'});
+ h+='</div><div style="text-align:center"><a class="cta" style="margin-top:22px;font-size:18px;max-width:100%" href="'+specialistUrl(r)+'" target="_blank" rel="noopener"><span class="pl">▶</span>Falar com um especialista</a></div></div>';
+ el.innerHTML=h;
+ var cn=document.getElementById("cnum"),from=CALC.shown||0,to=r.credito;CALC.shown=to;
+ if(cn&&from&&from!==to&&!window.matchMedia("(prefers-reduced-motion: reduce)").matches){var t0=null;(function st(ts){if(t0===null)t0=ts;var k=Math.min(1,(ts-t0)/450),e=1-Math.pow(1-k,3);cn.textContent=brl(from+(to-from)*e);if(k<1)requestAnimationFrame(st)})(performance.now())}
+}
+function renderRend(){var v=num(document.getElementById("iv").value),a=num(document.getElementById("ia").value),o=document.getElementById("rend");if(!v||!a){o.textContent="";return}var m=a/v*100;o.innerHTML="Rende <b>"+m.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})+"% ao mês</b> ("+(m*12).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})+"% ao ano, bruto, antes de impostos e vacância)."}
+function initCalc(){
+ CALC.p=LEAD.parcela||CALC.p;CALC.shown=0;var pv=document.getElementById("pv");pv.value=CALC.p.toLocaleString("pt-BR");
+ var ch=document.getElementById("chips");[1000,1500,2000,3000,5000].forEach(function(v){var b=document.createElement("button");b.type="button";b.className="chip";b.dataset.v=v;b.textContent=brl(v);ch.appendChild(b)});
+ function chipsOn(){[].forEach.call(ch.children,function(b){b.setAttribute("aria-pressed",String(+b.dataset.v===CALC.p))})}
+ pv.addEventListener("input",function(){fmtIn(pv);CALC.p=num(pv.value);chipsOn();renderCalc()});
+ ch.addEventListener("click",function(e){var b=e.target.closest(".chip");if(!b)return;CALC.p=+b.dataset.v;pv.value=CALC.p.toLocaleString("pt-BR");chipsOn();renderCalc()});
+ document.getElementById("res2").addEventListener("click",function(e){var b=e.target.closest(".pth");if(!b)return;CALC.path=(CALC.path===+b.dataset.path)?-1:+b.dataset.path;renderCalc()});
+ ["iv","ia"].forEach(function(id){var x=document.getElementById(id);x.addEventListener("input",function(){fmtIn(x);renderRend()})});
+ chipsOn();renderCalc();
 }
 function route(){
  var h=location.hash.replace("#",""),app=document.getElementById("app");
  app.innerHTML=h==="obrigado"?viewThanks():h==="calculadora"?viewCalc():viewHome();
  if(h==="obrigado"||h==="calculadora"||h==="")window.scrollTo(0,0);
- if(h==="calculadora"){["v","a","p"].forEach(function(i){document.getElementById(i).addEventListener("input",calc)});calc()}
+ if(h==="calculadora")initCalc();
  var vv=document.getElementById("vv");
  if(vv)vv.addEventListener("ended",function(){var w=document.querySelector(".wa");if(w){w.classList.add("pulse");w.scrollIntoView({behavior:"smooth",block:"center"})}});
  var f=document.getElementById("lead");
