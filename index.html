@@ -322,6 +322,7 @@ function initCalc(){
 }
 function route(){
  var h=location.hash.replace("#",""),app=document.getElementById("app");
+ if(h==="calculadora"){location.replace("/calculadora/");return}
  app.innerHTML=h==="obrigado"?viewThanks():h==="calculadora"?viewCalc():viewHome();
  if(h==="obrigado"||h==="calculadora"||h==="")window.scrollTo(0,0);
  if(h==="calculadora")initCalc();
